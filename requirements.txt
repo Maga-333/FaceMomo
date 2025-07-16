@@ -1,3 +1,4 @@
+dlib
 face_recognition
 opencv-python
 numpy
@@ -5,3 +6,4 @@ Pillow
 yagmail
 pickle-mixin
 pygame
+git+https://github.com/ageitgey/face_recognition_models
