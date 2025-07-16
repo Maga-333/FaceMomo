@@ -1,138 +1,161 @@
-import os
+import tkinter as tk
 import cv2
 import face_recognition
-import pickle
-import datetime
-import smtplib
-import imghdr
-from email.message import EmailMessage
+import numpy as np
+import threading
+import signal
+import os
+import sys
+from datetime import datetime
+import pygame
+import time
 
-# === CONFIG ===
-KNOWN_FACES_DIR = "known_faces"
-ENCODINGS_FILE = "face_encodings.pkl"
-LOGS_DIR = "logs"
-UNKNOWN_DIR = os.path.join(LOGS_DIR, "unknown_faces")
-LOG_FILE = os.path.join(LOGS_DIR, "log.txt")
+# Ctrl+C handler
+def signal_handler(sig, frame):
+    print("\n🛑 Exit requested. Closing FaceMomo...")
+    stop_scanning()
+    app.quit()
+    sys.exit(0)
 
-ALERT_EMAIL = "youremail@example.com"       # 🔁 Replace with your email
-ALERT_PASSWORD = "yourpassword"             # 🔁 Replace with your password
-RECEIVER_EMAIL = "receiver@example.com"     # 🔁 Receiver address
+signal.signal(signal.SIGINT, signal_handler)
 
-# === ENCODING KNOWN FACES ===
-def encode_faces():
-    encodings = []
-    names = []
+# Paths
+KNOWN_FOLDER = "known_faces"
+UNKNOWN_FOLDER = "logs/unknown_faces"
+LOG_FILE = os.path.join(UNKNOWN_FOLDER, "logs.txt")
+ALARM_SOUND = "police_alarm.wav"
 
-    for filename in os.listdir(KNOWN_FACES_DIR):
-        if filename.endswith(('.jpg', '.jpeg', '.png')):
-            path = os.path.join(KNOWN_FACES_DIR, filename)
-            image = face_recognition.load_image_file(path)
-            try:
-                encoding = face_recognition.face_encodings(image)[0]
-                encodings.append(encoding)
-                names.append(os.path.splitext(filename)[0])
-                print(f"[ENCODED] {filename}")
-            except IndexError:
-                print(f"[WARNING] No face found in {filename}")
+os.makedirs(UNKNOWN_FOLDER, exist_ok=True)
 
-    with open(ENCODINGS_FILE, "wb") as f:
-        pickle.dump((encodings, names), f)
-    print("[INFO] All faces encoded and saved.")
+# Init alarm
+pygame.mixer.init()
+alarm = pygame.mixer.Sound(ALARM_SOUND) if os.path.exists(ALARM_SOUND) else None
 
-# === LOAD ENCODINGS ===
-def load_encodings():
-    with open(ENCODINGS_FILE, "rb") as f:
-        return pickle.load(f)
+# GUI Setup
+app = tk.Tk()
+app.title("😎 FaceMomo - Real-Time Face Detector")
+app.configure(bg="black")
+app.geometry("900x550")
+app.resizable(True, True)
 
-# === SETUP LOGGING ===
-def setup_logging():
-    os.makedirs(LOGS_DIR, exist_ok=True)
-    os.makedirs(UNKNOWN_DIR, exist_ok=True)
-    return open(LOG_FILE, "a")
+# Entry (not used for now)
+entry = tk.Entry(app, width=70, bg="white", fg="black", relief=tk.FLAT)
+entry.pack(pady=5)
 
-# === EMAIL ALERT ===
-def send_email_alert(image_path, timestamp):
-    msg = EmailMessage()
-    msg["Subject"] = f"Unknown Face Detected @ {timestamp}"
-    msg["From"] = ALERT_EMAIL
-    msg["To"] = RECEIVER_EMAIL
-    msg.set_content("An unknown face was detected by FaceMomo. See attached image.")
+# Output box
+output = tk.Text(app, width=110, height=25, bg="black", fg="lightgreen", relief=tk.FLAT, bd=0)
+output.pack(padx=10, pady=5)
 
-    with open(image_path, 'rb') as f:
-        img_data = f.read()
-        img_type = imghdr.what(f.name)
-        msg.add_attachment(img_data, maintype='image', subtype=img_type, filename=os.path.basename(f.name))
+# Button frame
+button_frame = tk.Frame(app, bg="black")
+button_frame.pack(pady=5)
 
-    try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-            smtp.login(ALERT_EMAIL, ALERT_PASSWORD)
-            smtp.send_message(msg)
-        print("[EMAIL] Alert sent successfully.")
-    except Exception as e:
-        print(f"[EMAIL ERROR] {e}")
+def log_message(msg):
+    output.insert(tk.END, msg + "\n")
+    output.see(tk.END)
+    with open(LOG_FILE, "a") as f:
+        f.write(msg + "\n")
 
-# === START FACEMOMO ===
-def start_facemomo():
-    print("[INFO] Starting FaceMomo... Press 'q' to exit.")
+# Load known faces
+known_encodings = []
+known_names = []
 
-    known_face_encodings, known_face_names = load_encodings()
-    video_capture = cv2.VideoCapture(0)
-    log_file = setup_logging()
+def load_known_faces():
+    for filename in os.listdir(KNOWN_FOLDER):
+        if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+            path = os.path.join(KNOWN_FOLDER, filename)
+            img = face_recognition.load_image_file(path)
+            encodings = face_recognition.face_encodings(img)
+            if encodings:
+                known_encodings.append(encodings[0])
+                known_names.append(os.path.splitext(filename)[0])
+    log_message(f"✅ Loaded {len(known_encodings)} known faces.")
 
-    while True:
-        ret, frame = video_capture.read()
+# Flags and memory
+scanning = False
+last_saved_time = 0
+cooldown_seconds = 5
+
+detected_known_encodings = []
+detected_unknown_encodings = []
+
+def is_new_face(face_encoding, detected_list, tolerance=0.5):
+    return not any(face_recognition.compare_faces([enc], face_encoding, tolerance=tolerance)[0] for enc in detected_list)
+
+def start_scanning():
+    global scanning
+    scanning = True
+    thread = threading.Thread(target=run_face_detection)
+    thread.start()
+
+def stop_scanning():
+    global scanning
+    scanning = False
+
+def run_face_detection():
+    global last_saved_time
+    log_message("🟢 Starting webcam...")
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        log_message("❌ Failed to open webcam.")
+        return
+
+    while scanning:
+        ret, frame = cap.read()
         if not ret:
-            print("[ERROR] Failed to capture frame")
+            log_message("⚠️ Failed to read frame.")
             break
 
-        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-        rgb_small = small_frame[:, :, ::-1]
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        face_locations = face_recognition.face_locations(rgb)
+        face_encodings = face_recognition.face_encodings(rgb, face_locations)
 
-        face_locations = face_recognition.face_locations(rgb_small)
-        face_encodings = face_recognition.face_encodings(rgb_small, face_locations)
-
-        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+        for face_encoding, face_location in zip(face_encodings, face_locations):
+            matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.5)
             name = "Unknown"
 
             if True in matches:
-                match_index = matches.index(True)
-                name = known_face_names[match_index]
+                index = matches.index(True)
+                if is_new_face(face_encoding, detected_known_encodings):
+                    name = known_names[index]
+                    detected_known_encodings.append(face_encoding)
+                    log_message(f"😀 Known face detected: {name}")
+            else:
+                if is_new_face(face_encoding, detected_unknown_encodings):
+                    current_time = time.time()
+                    if current_time - last_saved_time >= cooldown_seconds:
+                        top, right, bottom, left = face_location
+                        face_image = frame[top:bottom, left:right]
+                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        filename = f"unknown_face_{timestamp}.jpg"
+                        save_path = os.path.join(UNKNOWN_FOLDER, filename)
+                        cv2.imwrite(save_path, face_image)
 
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            log_file.write(f"{timestamp} - {name}\n")
-            log_file.flush()
+                        if alarm:
+                            pygame.mixer.Sound.play(alarm)
 
-            # Rescale back to original frame
-            top *= 4
-            right *= 4
-            bottom *= 4
-            left *= 4
+                        log_message(f"🚨 Unknown face at {timestamp} → saved: {filename}")
+                        detected_unknown_encodings.append(face_encoding)
+                        last_saved_time = current_time
 
-            color = (0, 255, 0) if name != "Unknown" else (0, 0, 255)
-            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
-            cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+        app.update_idletasks()
+        app.update()
 
-            if name == "Unknown":
-                filename = f"unknown_{timestamp.replace(':', '-')}.jpg"
-                filepath = os.path.join(UNKNOWN_DIR, filename)
-                cv2.imwrite(filepath, frame)
-                send_email_alert(filepath, timestamp)
+    cap.release()
+    log_message("📴 Webcam stopped.")
 
-        cv2.imshow("🛡️ FaceMomo", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+# Load knowns
+load_known_faces()
 
-    video_capture.release()
-    cv2.destroyAllWindows()
-    log_file.close()
-    print("[INFO] FaceMomo Stopped.")
+# Buttons side by side
+start_button = tk.Button(button_frame, text="▶️ Start Scan", command=start_scanning, bg="green", fg="white", width=20)
+start_button.grid(row=0, column=0, padx=10)
 
-# === MAIN ===
-def main():
-    if not os.path.exists(ENCODINGS_FILE):
-        encode_faces()
-    start_facemomo()
+stop_button = tk.Button(button_frame, text="⏹️ Stop Scan", command=stop_scanning, bg="red", fg="white", width=20)
+stop_button.grid(row=0, column=1, padx=10)
 
-if __name__ == "__main__":
-    main()
+# GUI start
+try:
+    app.mainloop()
+except KeyboardInterrupt:
+    signal_handler(None, None)
