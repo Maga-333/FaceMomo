@@ -38,15 +38,12 @@ app.configure(bg="black")
 app.geometry("900x550")
 app.resizable(True, True)
 
-# Entry (not used for now)
 entry = tk.Entry(app, width=70, bg="white", fg="black", relief=tk.FLAT)
 entry.pack(pady=5)
 
-# Output box
 output = tk.Text(app, width=110, height=25, bg="black", fg="lightgreen", relief=tk.FLAT, bd=0)
 output.pack(padx=10, pady=5)
 
-# Button frame
 button_frame = tk.Frame(app, bg="black")
 button_frame.pack(pady=5)
 
@@ -100,44 +97,51 @@ def run_face_detection():
         log_message("❌ Failed to open webcam.")
         return
 
+    process_this_frame = True
+
     while scanning:
         ret, frame = cap.read()
         if not ret:
             log_message("⚠️ Failed to read frame.")
             break
 
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        face_locations = face_recognition.face_locations(rgb)
-        face_encodings = face_recognition.face_encodings(rgb, face_locations)
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
-        for face_encoding, face_location in zip(face_encodings, face_locations):
-            matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.5)
-            name = "Unknown"
+        if process_this_frame:
+            face_locations = face_recognition.face_locations(rgb_small_frame)
+            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
 
-            if True in matches:
-                index = matches.index(True)
-                if is_new_face(face_encoding, detected_known_encodings):
-                    name = known_names[index]
-                    detected_known_encodings.append(face_encoding)
-                    log_message(f"😀 Known face detected: {name}")
-            else:
-                if is_new_face(face_encoding, detected_unknown_encodings):
-                    current_time = time.time()
-                    if current_time - last_saved_time >= cooldown_seconds:
-                        top, right, bottom, left = face_location
-                        face_image = frame[top:bottom, left:right]
-                        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                        filename = f"unknown_face_{timestamp}.jpg"
-                        save_path = os.path.join(UNKNOWN_FOLDER, filename)
-                        cv2.imwrite(save_path, face_image)
+            for face_encoding, face_location in zip(face_encodings, face_locations):
+                matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.5)
+                name = "Unknown"
 
-                        if alarm:
-                            pygame.mixer.Sound.play(alarm)
+                if True in matches:
+                    index = matches.index(True)
+                    if is_new_face(face_encoding, detected_known_encodings):
+                        name = known_names[index]
+                        detected_known_encodings.append(face_encoding)
+                        log_message(f"😀 Known face detected: {name}")
+                else:
+                    if is_new_face(face_encoding, detected_unknown_encodings):
+                        current_time = time.time()
+                        if current_time - last_saved_time >= cooldown_seconds:
+                            # Rescale location to original frame size
+                            top, right, bottom, left = [v * 4 for v in face_location]
+                            face_image = frame[top:bottom, left:right]
+                            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                            filename = f"unknown_face_{timestamp}.jpg"
+                            save_path = os.path.join(UNKNOWN_FOLDER, filename)
+                            cv2.imwrite(save_path, face_image)
 
-                        log_message(f"🚨 Unknown face at {timestamp} → saved: {filename}")
-                        detected_unknown_encodings.append(face_encoding)
-                        last_saved_time = current_time
+                            if alarm:
+                                pygame.mixer.Sound.play(alarm)
 
+                            log_message(f"🚨 Unknown face at {timestamp} → saved: {filename}")
+                            detected_unknown_encodings.append(face_encoding)
+                            last_saved_time = current_time
+
+        process_this_frame = not process_this_frame  # skip alternate frames
         app.update_idletasks()
         app.update()
 
