@@ -13,7 +13,7 @@
 
 ### 📦 Step 1: Clone the Repository
 
-```bash
+
 git clone https://github.com/YourUsername/facemomo.git
 cd facemomo
 
@@ -55,3 +55,5 @@ known_faces/
 python3 facemomo.py
 
 Select camera(s) and alert email(s) using the GUI popups.
+
+Developed 💛 by LNT
