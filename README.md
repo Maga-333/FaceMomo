@@ -28,7 +28,11 @@ python3 -m venv .venv
 
 source .venv/bin/activate
 
-## 5. Upgrade pip and install all required libraries
+## 5. Install all required libraries
+
+pip install -r requirements.txt
+
+## 6. Upgrade pip and install all required libraries
 
 pip install --upgrade pip setuptools wheel
 
@@ -40,11 +44,11 @@ pip install face_recognition
 
 pip install git+https://github.com/ageitgey/face_recognition_models
 
-## 6. Start the FaceMomo alert system
+## 7. Start the FaceMomo alert system
 
 python3 facemomo.py
 
-## 7. To deactivate the virtual environment
+## 8. To deactivate the virtual environment
 
 deactivate
 
