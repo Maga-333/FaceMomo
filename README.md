@@ -44,11 +44,38 @@ pip install face_recognition
 
 pip install git+https://github.com/ageitgey/face_recognition_models
 
-## 7. Start the FaceMomo alert system
+## 7. Change Email & Password in facemomo.py
+
+    ✅ Open the file:
+
+nano facemomo.py
+
+or use your preferred editor like VS Code.
+
+### 🔍 Find the section with email settings — It will look similar to this:
+
+ALERT_EMAIL = "youremail@example.com"
+ALERT_PASSWORD = "yourpassword"
+RECEIVER_EMAIL = "receiver@example.com"
+
+### ✏️ Update the values:
+Replace the dummy emails and password with your real ones (preferably use a secure app-specific password if using Gmail).
+
+Example:
+
+ALERT_EMAIL = "facemomo.alerts@gmail.com"
+ALERT_PASSWORD = "your_app_specific_password"
+RECEIVER_EMAIL = "facemomo@example.com"
+
+    ⚠️ Important: If you're using Gmail, you must enable 2-step verification and use an App Password. Do not use your actual login password.
+
+💾 Save the file and exit.
+
+## 8. Start the FaceMomo alert system
 
 python3 facemomo.py
 
-## 8. To deactivate the virtual environment
+## 9. To deactivate the virtual environment
 
 deactivate
 
