@@ -1,4 +1,4 @@
-# 📸 FaceMomo Lite
+# 📸 FaceMomo
 
 **Soft on style, strong on security** – Real-time face recognition with known/unknown alerting, email notification, and optional alarm sound.
 
