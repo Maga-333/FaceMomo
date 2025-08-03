@@ -1,5 +1,4 @@
 # === FaceMomo Lite: Face Alert – Known vs Unknown ===
-# 🛠️ Modified for Wei Wuxi – August 2025
 
 import tkinter as tk
 from tkinter import simpledialog
