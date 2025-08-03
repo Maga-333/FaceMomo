@@ -52,20 +52,20 @@ nano facemomo.py
 
 or use your preferred editor like VS Code.
 
-### 🔍 Find the section with email settings — It will look similar to this:
+## 🔍 Find the section with email settings — It will look similar to this:
 
-ALERT_EMAIL = "youremail@example.com"
-ALERT_PASSWORD = "yourpassword"
-RECEIVER_EMAIL = "receiver@example.com"
+EMAIL_SENDER = "youremail@example.com"
 
-### ✏️ Update the values:
+EMAIL_PASSWORD = "yourpassword"
+
+## ✏️ Update the values:
 Replace the dummy emails and password with your real ones (preferably use a secure app-specific password if using Gmail).
 
 Example:
 
-ALERT_EMAIL = "facemomo.alerts@gmail.com"
-ALERT_PASSWORD = "your_app_specific_password"
-RECEIVER_EMAIL = "facemomo@example.com"
+EMAIL_SENDER = "facemomo@gmail.com"
+
+EMAIL_PASSWORD = "your_app_specific_password"
 
     ⚠️ Important: If you're using Gmail, you must enable 2-step verification and use an App Password. Do not use your actual login password.
 
