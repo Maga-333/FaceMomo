@@ -52,13 +52,13 @@ nano facemomo.py
 
 or use your preferred editor like VS Code.
 
-## 🔍 Find the section with email settings — It will look similar to this:
+## 8. 🔍 Find the section with email settings — It will look similar to this:
 
 EMAIL_SENDER = "youremail@example.com"
 
 EMAIL_PASSWORD = "yourpassword"
 
-## ✏️ Update the values:
+## 9. ✏️ Update the values:
 Replace the dummy emails and password with your real ones (preferably use a secure app-specific password if using Gmail).
 
 Example:
@@ -71,11 +71,11 @@ EMAIL_PASSWORD = "your_app_specific_password"
 
 💾 Save the file and exit.
 
-## 8. Start the FaceMomo alert system
+## 10. Start the FaceMomo alert system
 
 python3 facemomo.py
 
-## 9. To deactivate the virtual environment
+## 11. To deactivate the virtual environment
 
 deactivate
 
