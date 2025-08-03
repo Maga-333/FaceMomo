@@ -20,8 +20,8 @@ from email.message import EmailMessage
 KNOWN_FOLDER = "known_faces"
 UNKNOWN_FOLDER = "logs/unknown_faces"
 ALARM_SOUND = "police_alarm.wav"
-EMAIL_SENDER = "facemomoalert@gmail.com"       # ✅ Your sender Gmail
-EMAIL_PASSWORD = "favkyryhuxbqwasp "       # ✅ App password from https://myaccount.google.com/apppasswords
+EMAIL_SENDER = "facemomoalert@gmail.com"
+EMAIL_PASSWORD = "favkyryhuxbqwasp"
 
 # ==== Setup ====
 os.makedirs(UNKNOWN_FOLDER, exist_ok=True)
@@ -165,9 +165,7 @@ def run_camera(cam_ip):
                 if is_new_face(encoding, known_detected):
                     known_detected.append(encoding)
                     log(f"✅ Known face '{name}' on {cam_ip}")
-                    flash_alert("green")
-                    if alarm:
-                        pygame.mixer.Sound.play(alarm)
+                    flash_alert("green")  # NO alarm for known face
                     for email in email_list:
                         send_email(email, f"📸 KNOWN FACE DETECTED: {name}", f"{name} seen at {timestamp} on {cam_ip}")
             else:
