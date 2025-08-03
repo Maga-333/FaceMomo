@@ -1,4 +1,4 @@
-# 📸FaceMomo - Soft on Style, Strong on Security
+# 📸 FaceMomo - Soft on Style, Strong on Security
 
 FaceMomo is a smart face-recognition-based alert system that:
 
@@ -35,4 +35,4 @@ python3 facemomo.py
 # 7. To deactivate the virtual environment
 deactivate
 
-👨‍💻 Developed 💚 by LNT
+👨‍💻 Developed 💛 by LNT
