@@ -1,60 +1,38 @@
-# 📸 FaceMomo
+# 📸FaceMomo - Soft on Style, Strong on Security
 
-**Soft on style, strong on security** – Real-time face recognition with known/unknown alerting, email notification, and optional alarm sound.
+FaceMomo is a smart face-recognition-based alert system that:
 
----
+- 📷 Detects known vs unknown faces in real-time
 
-## 🚀 Quick Start
+- 🔊 Plays alert sounds when intruders are found
 
-> Follow these steps to clone and launch FaceMomo with zero errors.  
-> Tested and refined for *smooth setup experience* 💡.
+- 🧠 Uses face encoding for recognition
 
----
+- 📁 Logs images of unknown visitors
 
-```bash
-### 📦 Step 1: Clone the Repository
+- 🖼️ Shows GUI or terminal results instantly
 
+🔧 How to Install
 
-git clone https://github.com/YourUsername/facemomo.git
-cd facemomo
+# 1. Clone the repository
+git clone https://github.com/Maga-333/FaceMomo.git
 
-🧪 Step 2: Create Virtual Environment (Recommended)
+# 2. Navigate into the project directory
+cd FaceMomo
 
+# 3. Create a Python virtual environment
 python3 -m venv .venv
+
+# 4. Activate the virtual environment
 source .venv/bin/activate
 
-📥 Step 3: Install All Required Libraries
-
-pip install --upgrade pip setuptools wheel
+# 5. Install all required libraries
 pip install -r requirements.txt
 
-# Or install manually if needed:
-pip install opencv-python
-pip install dlib
-pip install face_recognition
-pip install git+https://github.com/ageitgey/face_recognition_models
-
-⚠️ Note:
-The first time you install face_recognition_models, it will download pre-trained model files.
-Depending on your internet, this may take a few minutes ⏳ – please wait patiently.
-
-🛠️ Step 4: Prepare Folders
-
-Ensure these folders exist in the root directory:
-
-    known_faces/ → for known person face images (.jpg, .png)
-
-    logs/unknown_faces/ → auto-saves new unknown face captures
-
-You can add images like:
-
-known_faces/
-├── image1.jpg
-
-▶️ Step 5: Run FaceMomo
-
+# 6. Start the FaceMomo alert system
 python3 facemomo.py
 
-Select camera(s) and alert email(s) using the GUI popups.
+# 7. To deactivate the virtual environment
+deactivate
 
-Developed 💛 by LNT
+👨‍💻 Developed 💚 by LNT
