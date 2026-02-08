@@ -166,7 +166,7 @@ class FaceMomoGUI:
         self.export_button = ctk.CTkButton(self.sidebar, text="💾 Export Logs", command=self.export_logs, fg_color="blue", corner_radius=25, font=self.cute_font)
         self.export_button.pack(pady=15)
         
-        self.exit_button = ctk.CTkButton(self.sidebar, text="👋 Exit 😘", command=self.exit_app, fg_color="red", hover_color="pink", corner_radius=25, font=self.cute_font)
+        self.exit_button = ctk.CTkButton(self.sidebar, text="👋 Exit", command=self.exit_app, fg_color="red", hover_color="pink", corner_radius=25, font=self.cute_font)
         self.exit_button.pack(pady=15)
         
         # Main Frame
